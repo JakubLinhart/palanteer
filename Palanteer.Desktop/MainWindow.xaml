@@ -1,0 +1,15 @@
+﻿<Window x:Class="Palanteer.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Palanteer.Desktop"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="350" Width="525">
+    <DockPanel>
+        <Expander ExpandDirection="Right" DockPanel.Dock="Right">
+            <local:EditPlaceControl x:Name="_placeControl" Width="150" />
+        </Expander>
+        <local:MapControl x:Name="_mapControl" ClipToBounds="true" Background="Gray" />
+    </DockPanel>
+</Window>
