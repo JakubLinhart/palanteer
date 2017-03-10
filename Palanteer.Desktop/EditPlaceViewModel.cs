@@ -11,43 +11,86 @@ namespace Palanteer.Desktop
 {
     public class EditPlaceViewModel : INotifyPropertyChanged
     {
-        private readonly ObservableCollection<Place> placesCollection;
-        private Place selectedPlace;
+        private readonly ObservableCollection<Marker> placesCollection;
+        private PlaceMarker selectedPlace;
 
-        public EditPlaceViewModel(Place player, ObservableCollection<Place> placesCollection)
+        public EditPlaceViewModel(Marker player, ObservableCollection<Marker> placesCollection,
+            IPlaceRepository placeRepository)
         {
             this.placesCollection = placesCollection;
+            this.placeRepository = placeRepository;
             Player = player;
         }
 
-        public Place Player { get; }
+        public Marker Player { get; }
 
-        public Place SelectedPlace
+        public PlaceMarker SelectedPlace
         {
             get { return selectedPlace; }
             set
             {
+                if (selectedPlace != null)
+                    selectedPlace.PropertyChanged -= OnPlacePropertyChanged;
+
                 selectedPlace = value;
+
+                if (selectedPlace != null)
+                    selectedPlace.PropertyChanged += OnPlacePropertyChanged;
+
                 OnPropertyChanged();
-                // ReSharper disable once ExplicitCallerInfoArgument
+                // ReSharper disable ExplicitCallerInfoArgument
                 OnPropertyChanged("CanEdit");
+                OnPropertyChanged("SelectedPlace");
+                // ReSharper restore ExplicitCallerInfoArgument
             }
         }
 
+        private async void OnPlacePropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            await UpdatePlace();
+        }
+
+        private readonly IPlaceRepository placeRepository;
+
         public bool CanEdit => SelectedPlace?.CanEdit ?? false;
 
-        public void NewPlace()
+        public async Task UpdatePlace()
         {
-            SelectedPlace = new Place() {Name = "new place", X = Player.X, Y = Player.Y};
-            SelectedPlace.Selected += OnPlaceSelected;
-            placesCollection.Add(SelectedPlace);
+            selectedPlace.Place.X = selectedPlace.X;
+            selectedPlace.Place.Y = selectedPlace.Y;
+            selectedPlace.Place.Name = selectedPlace.Name;
+
+            await placeRepository.Update(selectedPlace.Place);
+        }
+
+        public async Task NewPlace()
+        {
+            var place = new Place() {Id = IdGenerator.Generate(), Name = "new place", X = Player.X, Y = Player.Y};
+
+            SelectedPlace = CreatePlaceMarker(place);
+
+            await placeRepository.Create(place);
+        }
+
+        private PlaceMarker CreatePlaceMarker(Place place)
+        {
+            var marker = new PlaceMarker(place);
+            marker.Selected += OnPlaceSelected;
+            placesCollection.Add(marker);
+
+            return marker;
+        }
+
+        public void AddPlace(Place place)
+        {
+            CreatePlaceMarker(place);
         }
 
         private void OnPlaceSelected(object sender, EventArgs e)
         {
-            if (sender is Place place)
+            if (sender is PlaceMarker marker)
             {
-                SelectedPlace = place;
+                SelectedPlace = marker;
             }
         }
 
@@ -63,6 +106,7 @@ namespace Palanteer.Desktop
             if (SelectedPlace != null)
             {
                 placesCollection.Remove(SelectedPlace);
+                placeRepository.Delete(SelectedPlace.Place);
                 SelectedPlace = null;
             }
         }

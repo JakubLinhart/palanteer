@@ -21,7 +21,7 @@ namespace Palanteer.Desktop
         private Point origin;
         private Point start;
 
-        public ObservableCollection<Place> PlacesCollection { get; set; } = new ObservableCollection<Place>();
+        public ObservableCollection<Marker> MarkersCollection { get; set; } = new ObservableCollection<Marker>();
 
         private readonly Canvas canvas;
 
@@ -37,71 +37,71 @@ namespace Palanteer.Desktop
             }
             canvas.Children.Add(imageControl);
 
-            PlacesCollection.CollectionChanged += PlacesCollection_CollectionChanged;
+            MarkersCollection.CollectionChanged += MarkersCollection_CollectionChanged;
 
             base.Child = canvas;
             Initialize(canvas);
         }
 
-        private Dictionary<Place, Button> placeControls = new Dictionary<Place, Button>();
+        private Dictionary<Marker, Button> markerControls = new Dictionary<Marker, Button>();
 
-        private void PlacesCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void MarkersCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Remove:
-                    foreach (Place place in e.OldItems)
+                    foreach (Marker marker in e.OldItems)
                     {
-                        var button = placeControls[place];
-                        button.Click -= OnPlaceButtonClicked;
-                        place.PropertyChanged -= OnPlacePropertyChanged;
+                        var button = markerControls[marker];
+                        button.Click -= OnMarkerButtonClicked;
+                        marker.PropertyChanged -= OnMarkerPropertyChanged;
 
-                        placeControls.Remove(place);
+                        markerControls.Remove(marker);
                         canvas.Children.Remove(button);
                     }
                     break;
 
                 case NotifyCollectionChangedAction.Add:
-                    foreach (Place place in e.NewItems)
+                    foreach (Marker marker in e.NewItems)
                     {
                         var button = new Button
                         {
                             RenderTransform = new ScaleTransform(1.5, 1.5),
                             Background = Brushes.White,
                             BorderBrush = Brushes.Black,
-                            Content = place.Name,
+                            Content = marker.Name,
                         };
                         canvas.Children.Add(button);
 
-                        Canvas.SetLeft(button, place.X);
-                        Canvas.SetTop(button, place.Y);
+                        Canvas.SetLeft(button, marker.X);
+                        Canvas.SetTop(button, marker.Y);
 
-                        button.Click += OnPlaceButtonClicked;
-                        button.Tag = place;
+                        button.Click += OnMarkerButtonClicked;
+                        button.Tag = marker;
 
-                        placeControls[place] = button;
-                        place.PropertyChanged += OnPlacePropertyChanged;
+                        markerControls[marker] = button;
+                        marker.PropertyChanged += OnMarkerPropertyChanged;
                     }
                     break;
             }
         }
 
-        private void OnPlaceButtonClicked(object sender, RoutedEventArgs e)
+        private void OnMarkerButtonClicked(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.Tag is Place place)
+            if (sender is Button button && button.Tag is Marker marker)
             {
-                place.Select();
+                marker.Select();
             }
         }
 
-        private void OnPlacePropertyChanged(object sender, PropertyChangedEventArgs e)
+        private void OnMarkerPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (sender is Place place)
+            if (sender is Marker marker)
             {
-                var button = placeControls[place];
-                button.Content = place.Name;
-                Canvas.SetLeft(button, place.X);
-                Canvas.SetTop(button, place.Y);
+                var button = markerControls[marker];
+                button.Content = marker.Name;
+                Canvas.SetLeft(button, marker.X);
+                Canvas.SetTop(button, marker.Y);
             }
         }
 

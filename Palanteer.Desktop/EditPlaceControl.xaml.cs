@@ -22,9 +22,9 @@ namespace Palanteer.Desktop
             InitializeComponent();
         }
 
-        private void OnNewButtonClick(object sender, RoutedEventArgs e)
+        private async void OnNewButtonClick(object sender, RoutedEventArgs e)
         {
-            ((EditPlaceViewModel) DataContext).NewPlace();
+            await ((EditPlaceViewModel) DataContext).NewPlace();
         }
 
         private void OnDeleteButtonClick(object sender, RoutedEventArgs e)

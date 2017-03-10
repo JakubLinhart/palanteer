@@ -4,14 +4,16 @@ using System.Runtime.CompilerServices;
 
 namespace Palanteer.Desktop
 {
-    public class Place : INotifyPropertyChanged
+    public class Marker : INotifyPropertyChanged
     {
+        private readonly object model;
         private string name;
         private int x;
         private int y;
 
-        public Place(bool canEdit = true)
+        public Marker(object model, bool canEdit = true)
         {
+            this.model = model;
             CanEdit = canEdit;
         }
 
