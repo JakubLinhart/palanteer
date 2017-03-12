@@ -8,7 +8,10 @@
         Title="MainWindow" Height="350" Width="525">
     <DockPanel>
         <Expander ExpandDirection="Right" DockPanel.Dock="Right">
-            <local:EditPlaceControl x:Name="_placeControl" Width="150" />
+            <StackPanel Margin="5 10 5 10">
+                <local:SelectUltimaClient Margin="0 0 0 10" />
+                <local:EditPlaceControl x:Name="_placeControl" Width="150" />
+            </StackPanel>
         </Expander>
         <local:MapControl x:Name="_mapControl" ClipToBounds="true" Background="Gray" />
     </DockPanel>
