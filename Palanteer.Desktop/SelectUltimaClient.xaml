@@ -7,7 +7,7 @@
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <StackPanel>
-        <TextBlock Text="Clients:" />
+        <TextBlock Text="Available Ultima Online Clients:" />
         <ComboBox x:Name="_clientsComboBox" DisplayMemberPath="Title" SelectedValuePath="Handle" SelectionChanged="_clientsComboBox_OnSelectionChanged" />
     </StackPanel>
 </UserControl>

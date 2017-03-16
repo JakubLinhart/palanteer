@@ -1,59 +1,54 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.Generic;
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
 using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
 
 namespace Palanteer.Desktop
 {
     public class MapControl : Border
     {
-        private UIElement child = null;
+        private readonly Dictionary<object, Button> markerControls = new Dictionary<object, Button>();
+
+        private Canvas canvas;
+        private UIElement child;
         private Point origin;
         private Point start;
+        private MapViewModel mapViewModel;
 
-        public ObservableCollection<Marker> MarkersCollection { get; set; } = new ObservableCollection<Marker>();
-
-        private readonly Canvas canvas;
-
-        public MapControl()
+        public void Initialize(MapViewModel mapViewModel, MapSource mapSource)
         {
+            this.mapViewModel = mapViewModel;
             canvas = new Canvas();
 
             var imageControl = new Image();
             if (!DesignerProperties.GetIsInDesignMode(this))
             {
-                var image = new MapSource().GetMapImage();
+                var image = mapSource.GetMapImage();
                 imageControl.Source = image;
             }
             canvas.Children.Add(imageControl);
 
-            MarkersCollection.CollectionChanged += MarkersCollection_CollectionChanged;
+            mapViewModel.Places.CollectionChanged += OnMarkersCollectionChanged;
+            mapViewModel.Players.CollectionChanged += OnMarkersCollectionChanged;
 
-            base.Child = canvas;
+            Child = canvas;
             Initialize(canvas);
         }
 
-        private Dictionary<Marker, Button> markerControls = new Dictionary<Marker, Button>();
-
-        private void MarkersCollection_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+        private void OnMarkersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             switch (e.Action)
             {
                 case NotifyCollectionChangedAction.Remove:
-                    foreach (Marker marker in e.OldItems)
+                    foreach (INotifyPropertyChanged marker in e.OldItems)
                     {
                         var button = markerControls[marker];
                         button.Click -= OnMarkerButtonClicked;
+
                         marker.PropertyChanged -= OnMarkerPropertyChanged;
 
                         markerControls.Remove(marker);
@@ -62,19 +57,20 @@ namespace Palanteer.Desktop
                     break;
 
                 case NotifyCollectionChangedAction.Add:
-                    foreach (Marker marker in e.NewItems)
+                    foreach (IMarker marker in e.NewItems)
                     {
                         var button = new Button
                         {
                             RenderTransform = new ScaleTransform(1.5, 1.5),
                             Background = Brushes.White,
                             BorderBrush = Brushes.Black,
-                            Content = marker.Name,
                         };
                         canvas.Children.Add(button);
 
                         Canvas.SetLeft(button, marker.X);
                         Canvas.SetTop(button, marker.Y);
+                        button.Content = marker.Name;
+
 
                         button.Click += OnMarkerButtonClicked;
                         button.Tag = marker;
@@ -88,53 +84,58 @@ namespace Palanteer.Desktop
 
         private void OnMarkerButtonClicked(object sender, RoutedEventArgs e)
         {
-            if (sender is Button button && button.Tag is Marker marker)
-            {
+            if (sender is Button button && button.Tag is PlaceMarker marker)
                 marker.Select();
-            }
         }
 
         private void OnMarkerPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
-            if (sender is Marker marker)
+            if (sender is IMarker marker)
             {
                 var button = markerControls[marker];
                 button.Content = marker.Name;
                 Canvas.SetLeft(button, marker.X);
                 Canvas.SetTop(button, marker.Y);
             }
+
+            if (sender is PlayerMarker player && mapViewModel.Player.Id == player.Id)
+            {
+                var translateTransform = GetTranslateTransform(child);
+                var scaleTransform = GetScaleTransform(child);
+                translateTransform.X = (-player.X + (this.ActualWidth / scaleTransform.ScaleX / 2)) * scaleTransform.ScaleX;
+                translateTransform.Y = (-player.Y + (this.ActualHeight / scaleTransform.ScaleY / 2)) * scaleTransform.ScaleY;
+            }
         }
 
         private TranslateTransform GetTranslateTransform(UIElement element)
         {
-            return (TranslateTransform)((TransformGroup)element.RenderTransform)
-              .Children.First(tr => tr is TranslateTransform);
+            return (TranslateTransform) ((TransformGroup) element.RenderTransform)
+                .Children.First(tr => tr is TranslateTransform);
         }
 
         private ScaleTransform GetScaleTransform(UIElement element)
         {
-            return (ScaleTransform)((TransformGroup)element.RenderTransform)
-              .Children.First(tr => tr is ScaleTransform);
+            return (ScaleTransform) ((TransformGroup) element.RenderTransform)
+                .Children.First(tr => tr is ScaleTransform);
         }
 
         private void Initialize(UIElement element)
         {
-            this.child = element;
+            child = element;
             if (child != null)
             {
-                TransformGroup group = new TransformGroup();
-                ScaleTransform st = new ScaleTransform();
+                var group = new TransformGroup();
+                var st = new ScaleTransform();
                 group.Children.Add(st);
-                TranslateTransform tt = new TranslateTransform();
+                var tt = new TranslateTransform();
                 group.Children.Add(tt);
                 child.RenderTransform = group;
                 child.RenderTransformOrigin = new Point(0.0, 0.0);
-                this.MouseWheel += child_MouseWheel;
-                this.MouseLeftButtonDown += child_MouseLeftButtonDown;
-                this.MouseLeftButtonUp += child_MouseLeftButtonUp;
-                this.MouseMove += child_MouseMove;
-                this.PreviewMouseRightButtonDown += new MouseButtonEventHandler(
-                  child_PreviewMouseRightButtonDown);
+                MouseWheel += child_MouseWheel;
+                MouseLeftButtonDown += child_MouseLeftButtonDown;
+                MouseLeftButtonUp += child_MouseLeftButtonUp;
+                MouseMove += child_MouseMove;
+                PreviewMouseRightButtonDown += child_PreviewMouseRightButtonDown;
             }
         }
 
@@ -161,11 +162,11 @@ namespace Palanteer.Desktop
                 var st = GetScaleTransform(child);
                 var tt = GetTranslateTransform(child);
 
-                double zoom = e.Delta > 0 ? .2 : -.2;
+                var zoom = e.Delta > 0 ? .2 : -.2;
                 if (!(e.Delta > 0) && (st.ScaleX < .4 || st.ScaleY < .4))
                     return;
 
-                Point relative = e.GetPosition(child);
+                var relative = e.GetPosition(child);
                 double abosuluteX;
                 double abosuluteY;
 
@@ -187,7 +188,7 @@ namespace Palanteer.Desktop
                 var tt = GetTranslateTransform(child);
                 start = e.GetPosition(this);
                 origin = new Point(tt.X, tt.Y);
-                this.Cursor = Cursors.Hand;
+                Cursor = Cursors.Hand;
                 child.CaptureMouse();
             }
         }
@@ -197,11 +198,11 @@ namespace Palanteer.Desktop
             if (child != null)
             {
                 child.ReleaseMouseCapture();
-                this.Cursor = Cursors.Arrow;
+                Cursor = Cursors.Arrow;
             }
         }
 
-        void child_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        private void child_PreviewMouseRightButtonDown(object sender, MouseButtonEventArgs e)
         {
         }
 
@@ -212,7 +213,7 @@ namespace Palanteer.Desktop
                 if (child.IsMouseCaptured)
                 {
                     var tt = GetTranslateTransform(child);
-                    Vector v = start - e.GetPosition(this);
+                    var v = start - e.GetPosition(this);
                     tt.X = origin.X - v.X;
                     tt.Y = origin.Y - v.Y;
                 }

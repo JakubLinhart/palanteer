@@ -64,6 +64,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="IMarker.cs" />
+    <Compile Include="MapViewModel.cs" />
     <Compile Include="PlayerMarker.cs" />
     <Compile Include="PlayerRepository.cs" />
     <Compile Include="IPlaceRepository.cs" />
@@ -97,7 +99,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MapSource.cs" />
-    <Compile Include="Marker.cs" />
     <Compile Include="EditPlaceControl.xaml.cs">
       <DependentUpon>EditPlaceControl.xaml</DependentUpon>
     </Compile>

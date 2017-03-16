@@ -1,27 +1,61 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ComponentModel;
+using System.Runtime.CompilerServices;
 
 namespace Palanteer.Desktop
 {
-    internal sealed class PlayerMarker : Marker
+    public sealed class PlayerMarker : IMarker
     {
-        public string PlayerId { get; }
-
-        public PlayerMarker(Player player) : base(player, false)
+        public PlayerMarker(Player player)
         {
-            PlayerId = player.Id;
-
-            UpdateFromModel(player);
+            Model = player;
         }
+
+        public int X
+        {
+            get { return Model.X; }
+            set
+            {
+                Model.X = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public int Y
+        {
+            get { return Model.Y; }
+            set
+            {
+                Model.Y = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Name
+        {
+            get { return Model.Name; }
+            set
+            {
+                Model.Name = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Id => Model.Id;
+
+        public Player Model { get; }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         public void UpdateFromModel(Player player)
         {
             X = player.X;
             Y = player.Y;
             Name = player.Name;
+        }
+
+        private void OnPropertyChanged([CallerMemberName] string propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
     }
 }

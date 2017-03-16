@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
@@ -7,6 +8,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Threading;
 using Microsoft.AspNet.SignalR.Client;
 using Ultima;
@@ -16,27 +18,28 @@ namespace Palanteer.Desktop
     public partial class MainWindow : Window
     {
         private readonly DispatcherTimer playerPositionRefreshTimer = new DispatcherTimer();
-        private readonly Marker player = new Marker(null, canEdit: false) {Name = "Player"};
         private readonly IPlayerRepository playerRepository = new PlayerRepository(Client );
-        private readonly string playerId = IdGenerator.Generate();
+        private readonly MapViewModel mapViewModel = new MapViewModel();
 
         protected override void OnClosing(CancelEventArgs e)
         {
-            playerRepository.Delete(playerId);
+            playerRepository.Delete(mapViewModel.Player.Id);
         }
 
         public MainWindow()
         {
             InitializeComponent();
-            
-            _mapControl.MarkersCollection.Add(player);
+
+            DataContext = mapViewModel;
 
             Client.BaseAddress = new Uri("http://localhost:2044/");
             Client.DefaultRequestHeaders.Accept.Clear();
             Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
-            InitializeEditPlaceViewModel();
+            _mapControl.Initialize(mapViewModel, new MapSource());
+            mapViewModel.Player = new PlayerMarker(new Player() { Id = IdGenerator.Generate(), Name = "Player" });
 
+            InitializeEditPlaceViewModel();
             Task.Run(() => InitializePlayerPositionTracking());
             Task.Run(() => LoadRemotePlayers());
         }
@@ -44,15 +47,15 @@ namespace Palanteer.Desktop
         private async Task LoadRemotePlayers()
         {
             var allPlayers = await playerRepository.GetAll();
-            var markers = allPlayers.Where(p => p.Id != playerId)
+            var markers = allPlayers.Where(p => p.Id != mapViewModel.Player.Id)
                 .Select(p => new PlayerMarker(p));
 
             this.Dispatcher.Invoke(() =>
             {
                 foreach (var marker in markers)
                 {
-                    this.remotePlayerMarkers[marker.PlayerId] = marker;
-                    _mapControl.MarkersCollection.Add(marker);
+                    this.remotePlayerMarkers[marker.Id] = marker;
+                    mapViewModel.Players.Add(marker);
                 }
             });
         }
@@ -62,7 +65,7 @@ namespace Palanteer.Desktop
         private void InitializeEditPlaceViewModel()
         {
             var placeRepository = new HttpRestPlaceRepository(Client);
-            var placeViewModel = new EditPlaceViewModel(player, _mapControl.MarkersCollection, placeRepository);
+            var placeViewModel = new EditPlaceViewModel(mapViewModel.Player, mapViewModel.Places, placeRepository);
             _placeControl.DataContext = placeViewModel;
 
             Task.Run(() => LoadSharedPlaces(placeViewModel, placeRepository));
@@ -96,18 +99,21 @@ namespace Palanteer.Desktop
 
         private void OnRemotePlayerUpdated(Player player)
         {
-            Dispatcher.Invoke(() =>
+            if (player.Id != mapViewModel.Player.Id)
             {
-                if (!remotePlayerMarkers.TryGetValue(player.Id, out PlayerMarker marker))
+                Dispatcher.Invoke(() =>
                 {
-                    marker = new PlayerMarker(player);
-                    remotePlayerMarkers[player.Id] = marker;
+                    if (!remotePlayerMarkers.TryGetValue(player.Id, out PlayerMarker marker))
+                    {
+                        marker = new PlayerMarker(player);
+                        remotePlayerMarkers[player.Id] = marker;
 
-                    _mapControl.MarkersCollection.Add(marker);
-                }
-                else
-                    marker.UpdateFromModel(player);
-            });
+                        mapViewModel.Players.Add(marker);
+                    }
+                    else
+                        marker.UpdateFromModel(player);
+                });
+            }
         }
 
         private void PlayerPositionRefreshTimerOnTick(object sender, EventArgs eventArgs)
@@ -122,11 +128,33 @@ namespace Palanteer.Desktop
             int x = 0, y = 0, z = 0, facet = 0;
             if (Ultima.Client.FindLocation(ref x, ref y, ref z, ref facet))
             {
-                if (player.X != x || player.Y != y)
+                if (mapViewModel.Player.X != x || mapViewModel.Player.Y != y)
                 {
-                    player.X = x;
-                    player.Y = y;
-                    playerRepository.Update(new Player() {Id = playerId, Name = "Player", X = x, Y = y});
+                    mapViewModel.Player.X = x;
+                    mapViewModel.Player.Y = y;
+                    playerRepository.Update(mapViewModel.Player.Model);
+                }
+            }
+            else
+            {
+                Ultima.Client.Calibrate();
+            }
+        }
+
+        private void Selector_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (e.AddedItems.Count > 0)
+            {
+                if (sender is ListBox listBox)
+                {
+                    var valid = e.AddedItems[0];
+                    foreach (var item in new ArrayList(listBox.SelectedItems))
+                    {
+                        if (item != valid)
+                        {
+                            listBox.SelectedItems.Remove(item);
+                        }
+                    }
                 }
             }
         }

@@ -10,7 +10,12 @@
         <Expander ExpandDirection="Right" DockPanel.Dock="Right">
             <StackPanel Margin="5 10 5 10">
                 <local:SelectUltimaClient Margin="0 0 0 10" />
-                <local:EditPlaceControl x:Name="_placeControl" Width="150" />
+                <TextBlock Text="Player name:" />
+                <TextBox Text="{Binding Path=Player.Name}"  Margin="0 0 0 10" />
+                <local:EditPlaceControl x:Name="_placeControl" Width="180" Margin="0 0 0 10" />
+                <TextBlock Text="Players:" />
+                <ListBox ItemsSource="{Binding Path=Players}" DisplayMemberPath="Name" SelectedValuePath="Id" SelectionMode="Multiple" SelectionChanged="Selector_OnSelectionChanged">
+                </ListBox>
             </StackPanel>
         </Expander>
         <local:MapControl x:Name="_mapControl" ClipToBounds="true" Background="Gray" />

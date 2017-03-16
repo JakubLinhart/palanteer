@@ -11,10 +11,10 @@ namespace Palanteer.Desktop
 {
     public class EditPlaceViewModel : INotifyPropertyChanged
     {
-        private readonly ObservableCollection<Marker> placesCollection;
+        private readonly ObservableCollection<PlaceMarker> placesCollection;
         private PlaceMarker selectedPlace;
 
-        public EditPlaceViewModel(Marker player, ObservableCollection<Marker> placesCollection,
+        public EditPlaceViewModel(PlayerMarker player, ObservableCollection<PlaceMarker> placesCollection,
             IPlaceRepository placeRepository)
         {
             this.placesCollection = placesCollection;
@@ -22,7 +22,7 @@ namespace Palanteer.Desktop
             Player = player;
         }
 
-        public Marker Player { get; }
+        public PlayerMarker Player { get; }
 
         public PlaceMarker SelectedPlace
         {
@@ -51,8 +51,6 @@ namespace Palanteer.Desktop
         }
 
         private readonly IPlaceRepository placeRepository;
-
-        public bool CanEdit => SelectedPlace?.CanEdit ?? false;
 
         public async Task UpdatePlace()
         {
