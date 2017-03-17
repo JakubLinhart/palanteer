@@ -12,6 +12,7 @@ namespace Palanteer.Desktop
     public sealed class MapViewModel : INotifyPropertyChanged
     {
         private PlayerMarker player;
+        private PlayerMarker trackedPlayer;
         public event PropertyChangedEventHandler PropertyChanged;
 
         public ObservableCollection<PlayerMarker> Players { get; } = new ObservableCollection<PlayerMarker>();
@@ -31,6 +32,16 @@ namespace Palanteer.Desktop
 
                 Players.Add(player);
 
+                OnPropertyChanged();
+            }
+        }
+
+        public PlayerMarker TrackedPlayer
+        {
+            get { return trackedPlayer; }
+            set
+            {
+                trackedPlayer = value;
                 OnPropertyChanged();
             }
         }

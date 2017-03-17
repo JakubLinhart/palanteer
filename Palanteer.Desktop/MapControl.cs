@@ -32,11 +32,25 @@ namespace Palanteer.Desktop
             }
             canvas.Children.Add(imageControl);
 
+            mapViewModel.PropertyChanged += OnMapViewModelPropertyChanged;
             mapViewModel.Places.CollectionChanged += OnMarkersCollectionChanged;
             mapViewModel.Players.CollectionChanged += OnMarkersCollectionChanged;
 
             Child = canvas;
             Initialize(canvas);
+        }
+
+        private void OnMapViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
+        {
+            switch (e.PropertyName)
+            {
+                case "TrackedPlayer":
+                    if (this.mapViewModel.TrackedPlayer != null)
+                    {
+                        CenterTo(this.mapViewModel.TrackedPlayer);
+                    }
+                    break;
+            }
         }
 
         private void OnMarkersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -98,13 +112,18 @@ namespace Palanteer.Desktop
                 Canvas.SetTop(button, marker.Y);
             }
 
-            if (sender is PlayerMarker player && mapViewModel.Player.Id == player.Id)
+            if (sender is PlayerMarker player && mapViewModel.TrackedPlayer?.Id == player.Id)
             {
-                var translateTransform = GetTranslateTransform(child);
-                var scaleTransform = GetScaleTransform(child);
-                translateTransform.X = (-player.X + (this.ActualWidth / scaleTransform.ScaleX / 2)) * scaleTransform.ScaleX;
-                translateTransform.Y = (-player.Y + (this.ActualHeight / scaleTransform.ScaleY / 2)) * scaleTransform.ScaleY;
+                CenterTo(player);
             }
+        }
+
+        private void CenterTo(IMarker marker)
+        {
+            var translateTransform = GetTranslateTransform(child);
+            var scaleTransform = GetScaleTransform(child);
+            translateTransform.X = (-marker.X + (this.ActualWidth / scaleTransform.ScaleX / 2)) * scaleTransform.ScaleX;
+            translateTransform.Y = (-marker.Y + (this.ActualHeight / scaleTransform.ScaleY / 2)) * scaleTransform.ScaleY;
         }
 
         private TranslateTransform GetTranslateTransform(UIElement element)
