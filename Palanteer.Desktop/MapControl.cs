@@ -73,9 +73,12 @@ namespace Palanteer.Desktop
                 case NotifyCollectionChangedAction.Add:
                     foreach (IMarker marker in e.NewItems)
                     {
+                        var transformGroup = new TransformGroup();
+                        transformGroup.Children.Add(new RotateTransform(-45));
+
                         var button = new Button
                         {
-                            RenderTransform = new ScaleTransform(1.5, 1.5),
+                            RenderTransform = transformGroup,
                             Background = Brushes.White,
                             BorderBrush = Brushes.Black,
                         };
@@ -122,8 +125,19 @@ namespace Palanteer.Desktop
         {
             var translateTransform = GetTranslateTransform(child);
             var scaleTransform = GetScaleTransform(child);
-            translateTransform.X = (-marker.X + (this.ActualWidth / scaleTransform.ScaleX / 2)) * scaleTransform.ScaleX;
-            translateTransform.Y = (-marker.Y + (this.ActualHeight / scaleTransform.ScaleY / 2)) * scaleTransform.ScaleY;
+            var rotateTransform = GetRotateTransform(child);
+
+            var dimensions = new Point(this.ActualWidth, this.ActualHeight);
+            var origDim = rotateTransform.Inverse.Transform(scaleTransform.Inverse.Transform(dimensions));
+
+            var point = new Point();
+            point.X = (-marker.X + origDim.X / 2);
+            point.Y = (-marker.Y + origDim.Y / 2);
+
+            var rotatedPoint = scaleTransform.Transform(rotateTransform.Transform(point));
+
+            translateTransform.X = rotatedPoint.X;
+            translateTransform.Y = rotatedPoint.Y;
         }
 
         private TranslateTransform GetTranslateTransform(UIElement element)
@@ -138,12 +152,20 @@ namespace Palanteer.Desktop
                 .Children.First(tr => tr is ScaleTransform);
         }
 
+        private RotateTransform GetRotateTransform(UIElement element)
+        {
+            return (RotateTransform)((TransformGroup)element.RenderTransform)
+                .Children.OfType<RotateTransform>().First();
+        }
+
         private void Initialize(UIElement element)
         {
             child = element;
             if (child != null)
             {
                 var group = new TransformGroup();
+                var rotateTransform = new RotateTransform(45);
+                group.Children.Add(rotateTransform);
                 var st = new ScaleTransform();
                 group.Children.Add(st);
                 var tt = new TranslateTransform();
@@ -178,25 +200,40 @@ namespace Palanteer.Desktop
         {
             if (child != null)
             {
-                var st = GetScaleTransform(child);
-                var tt = GetTranslateTransform(child);
+                var scaleTransform = GetScaleTransform(child);
+                var translateTransform = GetTranslateTransform(child);
+                var rotateTransform = GetRotateTransform(child);
 
                 var zoom = e.Delta > 0 ? .2 : -.2;
-                if (!(e.Delta > 0) && (st.ScaleX < .4 || st.ScaleY < .4))
+                if (!(e.Delta > 0) && (scaleTransform.ScaleX < .4 || scaleTransform.ScaleY < .4))
                     return;
 
                 var relative = e.GetPosition(child);
-                double abosuluteX;
-                double abosuluteY;
+                var transformedRelative = rotateTransform.Transform(scaleTransform.Transform(relative));
 
-                abosuluteX = relative.X * st.ScaleX + tt.X;
-                abosuluteY = relative.Y * st.ScaleY + tt.Y;
+                var abosuluteX = transformedRelative.X + translateTransform.X;
+                var abosuluteY = transformedRelative.Y + translateTransform.Y;
 
-                st.ScaleX += zoom;
-                st.ScaleY += zoom;
+                scaleTransform.ScaleX += zoom;
+                scaleTransform.ScaleY += zoom;
 
-                tt.X = abosuluteX - relative.X * st.ScaleX;
-                tt.Y = abosuluteY - relative.Y * st.ScaleY;
+                transformedRelative = rotateTransform.Transform(scaleTransform.Transform(relative));
+                translateTransform.X = abosuluteX - transformedRelative.X;
+                translateTransform.Y = abosuluteY - transformedRelative.Y;
+
+                var group = new TransformGroup();
+                if (scaleTransform.ScaleX < 1)
+                {
+                    group.Children.Add((Transform) scaleTransform.Inverse);
+                }
+                group.Children.Add((Transform) rotateTransform.Inverse);
+                foreach (var markerControl in markerControls.Values)
+                {
+                    if (markerControl.Tag is PlayerMarker)
+                    {
+                        markerControl.RenderTransform = group;
+                    }
+                }
             }
         }
 
