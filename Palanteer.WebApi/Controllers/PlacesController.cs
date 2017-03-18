@@ -19,7 +19,6 @@ namespace Palanteer.WebApi.Controllers
         public void Post([FromBody]Place place)
         {
             Places[place.Id] = place;
-            Thread.Sleep(5000);
         }
 
         public void Delete(string id)

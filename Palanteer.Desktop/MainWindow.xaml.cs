@@ -9,6 +9,7 @@ using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.AspNet.SignalR.Client;
 using Ultima;
@@ -18,8 +19,10 @@ namespace Palanteer.Desktop
     public partial class MainWindow : Window
     {
         private readonly DispatcherTimer playerPositionRefreshTimer = new DispatcherTimer();
-        private readonly IPlayerRepository playerRepository = new PlayerRepository(Client );
+        private readonly IPlayerRepository playerRepository = new PlayerRepository(Client);
+        private readonly ChatRepository chatRepository = new ChatRepository(Client);
         private readonly MapViewModel mapViewModel = new MapViewModel();
+        private readonly ChatViewModel chatViewModel;
 
         protected override void OnClosing(CancelEventArgs e)
         {
@@ -42,6 +45,9 @@ namespace Palanteer.Desktop
             InitializeEditPlaceViewModel();
             Task.Run(() => InitializePlayerPositionTracking());
             Task.Run(() => LoadRemotePlayers());
+
+            chatViewModel = new ChatViewModel(mapViewModel.Player, chatRepository, this.Dispatcher);
+            _chatControl.DataContext = chatViewModel;
         }
 
         private async Task LoadRemotePlayers()
@@ -90,6 +96,7 @@ namespace Palanteer.Desktop
             var hubConnection = new HubConnection("http://localhost:2044/");
             IHubProxy palanteerHubProxy = hubConnection.CreateHubProxy("PalanteerHub");
             palanteerHubProxy.On<Player>("PlayerUpdated", OnRemotePlayerUpdated);
+            palanteerHubProxy.On<ChatLine>("ChatLineAdded", this.chatRepository.OnChatLineAdded);
             hubConnection.Start().Wait();
 
             playerPositionRefreshTimer.Tick += PlayerPositionRefreshTimerOnTick;
