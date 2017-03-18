@@ -25,12 +25,18 @@ namespace Palanteer.Desktop
         {
             InitializeComponent();
 
+            LoadClients();
+        }
+
+        private void LoadClients()
+        {
             var clients = Client.FindWindowsWithText("Ultima Online")
                 .Select(h => new UltimaClient() {Handle = h, Title = Client.GetWindowText(h)})
                 .ToArray();
 
             _clientsComboBox.ItemsSource = clients;
-            _clientsComboBox.SelectedItem = clients.First();
+            if (clients.Any())
+                _clientsComboBox.SelectedItem = clients.First();
         }
 
         private void _clientsComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -42,6 +48,11 @@ namespace Palanteer.Desktop
                 Client.Handle = new ClientWindowHandle(selectedValue);
                 Client.Calibrate();
             });
+        }
+
+        private void RefreshOnClick(object sender, RoutedEventArgs e)
+        {
+            LoadClients();
         }
     }
 }
