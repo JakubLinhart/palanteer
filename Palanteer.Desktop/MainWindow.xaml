@@ -10,6 +10,7 @@
     <DockPanel>
         <Expander ExpandDirection="Right" DockPanel.Dock="Right">
             <StackPanel Margin="5 10 5 10">
+                <CheckBox Content="x-ray view" Checked="XRayOnChecked" Unchecked="XRayOnUnchecked" />
                 <local:SelectUltimaClient Margin="0 0 0 10" />
                 <TextBlock Text="Player name:" />
                 <TextBox Text="{Binding Path=Player.Name}"  Margin="0 0 0 10" />

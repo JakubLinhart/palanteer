@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 using System.Windows.Media.Imaging;
 using Ultima;
 
@@ -12,24 +13,39 @@ namespace Palanteer.Desktop
 {
     public class MapSource
     {
-        public BitmapImage GetMapImage()
+        private Task<BitmapImage> GetMapImage(string cacheFileName, bool xray)
         {
-            if (!File.Exists("map.png"))
+            return Task.Run(() =>
             {
-                var bitmap = Map.Felucca.GetImage(0, 0, 768, 512, true);
-                using (FileStream stream = File.Create("map.png"))
+                if (!File.Exists(cacheFileName))
                 {
-                    bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                    var bitmap = Map.Felucca.GetImage(0, 0, 768, 512, xray);
+                    using (FileStream stream = File.Create(cacheFileName))
+                    {
+                        bitmap.Save(stream, System.Drawing.Imaging.ImageFormat.Png);
+                    }
                 }
-            }
 
-            if (File.Exists("map.png"))
-            {
-                var image = new BitmapImage(new Uri("pack://siteoforigin:,,,/map.png"));
-                return image;
-            }
+                if (File.Exists(cacheFileName))
+                {
+                    BitmapImage image = null;
+                    Application.Current.Dispatcher.Invoke(
+                        () => image = new BitmapImage(new Uri("pack://siteoforigin:,,,/" + cacheFileName)));
+                    return image;
+                }
 
-            return null;
+                return null;
+            });
+        }
+
+        public Task<BitmapImage> GetMapImage()
+        {
+            return GetMapImage("map.png", true);
+        }
+
+        public Task<BitmapImage> GetXRayMapImage()
+        {
+            return GetMapImage("map-xray.png", false);
         }
     }
 }

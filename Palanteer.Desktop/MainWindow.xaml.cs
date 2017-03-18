@@ -165,5 +165,15 @@ namespace Palanteer.Desktop
                 }
             }
         }
+
+        private void XRayOnChecked(object sender, RoutedEventArgs e)
+        {
+            _mapControl.XRay = true;
+        }
+
+        private void XRayOnUnchecked(object sender, RoutedEventArgs e)
+        {   
+            _mapControl.XRay = false;
+        }
     }
 }

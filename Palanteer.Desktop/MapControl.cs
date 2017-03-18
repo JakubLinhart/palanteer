@@ -2,10 +2,12 @@
 using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Linq;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Palanteer.Desktop
 {
@@ -15,21 +17,34 @@ namespace Palanteer.Desktop
 
         private Canvas canvas;
         private UIElement child;
+        private Image imageControl;
+
+        private BitmapImage mapImage;
+        private MapViewModel mapViewModel;
         private Point origin;
         private Point start;
-        private MapViewModel mapViewModel;
+        private bool xRay;
+        private BitmapImage xrayMapImage;
+
+        public bool XRay
+        {
+            get { return xRay; }
+            set
+            {
+                if (xRay != value)
+                    imageControl.Source = value ? xrayMapImage : mapImage;
+                xRay = value;
+            }
+        }
 
         public void Initialize(MapViewModel mapViewModel, MapSource mapSource)
         {
             this.mapViewModel = mapViewModel;
             canvas = new Canvas();
 
-            var imageControl = new Image();
+            imageControl = new Image();
             if (!DesignerProperties.GetIsInDesignMode(this))
-            {
-                var image = mapSource.GetMapImage();
-                imageControl.Source = image;
-            }
+                Task.Run(() => LoadImages(mapSource));
             canvas.Children.Add(imageControl);
 
             mapViewModel.PropertyChanged += OnMapViewModelPropertyChanged;
@@ -40,15 +55,21 @@ namespace Palanteer.Desktop
             Initialize(canvas);
         }
 
+        private async void LoadImages(MapSource mapSource)
+        {
+            mapImage = await mapSource.GetMapImage();
+            xrayMapImage = await mapSource.GetXRayMapImage();
+
+            Dispatcher.Invoke(() => imageControl.Source = mapImage);
+        }
+
         private void OnMapViewModelPropertyChanged(object sender, PropertyChangedEventArgs e)
         {
             switch (e.PropertyName)
             {
                 case "TrackedPlayer":
-                    if (this.mapViewModel.TrackedPlayer != null)
-                    {
-                        CenterTo(this.mapViewModel.TrackedPlayer);
-                    }
+                    if (mapViewModel.TrackedPlayer != null)
+                        CenterTo(mapViewModel.TrackedPlayer);
                     break;
             }
         }
@@ -80,7 +101,7 @@ namespace Palanteer.Desktop
                         {
                             RenderTransform = transformGroup,
                             Background = Brushes.White,
-                            BorderBrush = Brushes.Black,
+                            BorderBrush = Brushes.Black
                         };
                         canvas.Children.Add(button);
 
@@ -116,9 +137,7 @@ namespace Palanteer.Desktop
             }
 
             if (sender is PlayerMarker player && mapViewModel.TrackedPlayer?.Id == player.Id)
-            {
                 CenterTo(player);
-            }
         }
 
         private void CenterTo(IMarker marker)
@@ -127,12 +146,12 @@ namespace Palanteer.Desktop
             var scaleTransform = GetScaleTransform(child);
             var rotateTransform = GetRotateTransform(child);
 
-            var dimensions = new Point(this.ActualWidth, this.ActualHeight);
+            var dimensions = new Point(ActualWidth, ActualHeight);
             var origDim = rotateTransform.Inverse.Transform(scaleTransform.Inverse.Transform(dimensions));
 
             var point = new Point();
-            point.X = (-marker.X + origDim.X / 2);
-            point.Y = (-marker.Y + origDim.Y / 2);
+            point.X = -marker.X + origDim.X / 2;
+            point.Y = -marker.Y + origDim.Y / 2;
 
             var rotatedPoint = scaleTransform.Transform(rotateTransform.Transform(point));
 
@@ -154,7 +173,7 @@ namespace Palanteer.Desktop
 
         private RotateTransform GetRotateTransform(UIElement element)
         {
-            return (RotateTransform)((TransformGroup)element.RenderTransform)
+            return ((TransformGroup) element.RenderTransform)
                 .Children.OfType<RotateTransform>().First();
         }
 
@@ -223,16 +242,12 @@ namespace Palanteer.Desktop
 
                 var group = new TransformGroup();
                 if (scaleTransform.ScaleX < 1)
-                {
                     group.Children.Add((Transform) scaleTransform.Inverse);
-                }
                 group.Children.Add((Transform) rotateTransform.Inverse);
                 foreach (var markerControl in markerControls.Values)
                 {
                     if (markerControl.Tag is PlayerMarker)
-                    {
                         markerControl.RenderTransform = group;
-                    }
                 }
             }
         }
