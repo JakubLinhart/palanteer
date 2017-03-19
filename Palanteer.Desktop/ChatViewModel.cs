@@ -3,6 +3,7 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Net.Http;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 using System.Windows.Threading;
 
 namespace Palanteer.Desktop
@@ -11,14 +12,28 @@ namespace Palanteer.Desktop
     {
         private readonly PlayerMarker player;
         private readonly IChatRepository chatRepository;
+        private readonly Dispatcher dispatcher;
 
         private string prompt;
+        private ObservableCollection<ChatLine> lines = new ObservableCollection<ChatLine>();
 
         public ChatViewModel(PlayerMarker player, IChatRepository chatRepository, Dispatcher dispatcher)
         {
             this.player = player;
             this.chatRepository = chatRepository;
+            this.dispatcher = dispatcher;
             this.chatRepository.ChatLineAdded += (sender, line) => dispatcher.Invoke(() => Lines.Add(line));
+
+            Task.Run(LoadHistory);
+        }
+
+        private async Task LoadHistory()
+        {
+            var lines = await this.chatRepository.GetHistory();
+            dispatcher.Invoke(() =>
+            {
+                Lines = new ObservableCollection<ChatLine>(lines);
+            });
         }
 
         public string Prompt
@@ -31,7 +46,15 @@ namespace Palanteer.Desktop
             }
         }
 
-        public ObservableCollection<ChatLine> Lines { get; } = new ObservableCollection<ChatLine>();
+        public ObservableCollection<ChatLine> Lines
+        {
+            get { return lines; }
+            private set
+            {
+                lines = value;
+                OnPropertyChanged();
+            }
+        }
 
         public event PropertyChangedEventHandler PropertyChanged;
 

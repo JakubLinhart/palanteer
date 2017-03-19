@@ -41,6 +41,9 @@ namespace Palanteer.Desktop
 
         private void _clientsComboBox_OnSelectionChanged(object sender, SelectionChangedEventArgs e)
         {
+            if (_clientsComboBox.SelectedValue == null)
+                return;
+
             IntPtr selectedValue = (IntPtr)_clientsComboBox.SelectedValue;
 
             Task.Run(() =>

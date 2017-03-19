@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Palanteer.Desktop
@@ -8,5 +9,7 @@ namespace Palanteer.Desktop
         event EventHandler<ChatLine> ChatLineAdded;
 
         Task SendChatLine(ChatLine line);
+
+        Task<IEnumerable<ChatLine>> GetHistory();
     }
 }
