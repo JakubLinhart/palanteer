@@ -78,6 +78,10 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="AutomapImportWindow.xaml.cs">
+      <DependentUpon>AutomapImportWindow.xaml</DependentUpon>
+    </Compile>
+    <Compile Include="AutomapImportPlaceViewModel.cs" />
     <Compile Include="ChatControl.xaml.cs">
       <DependentUpon>ChatControl.xaml</DependentUpon>
     </Compile>
@@ -97,6 +101,10 @@
       <DependentUpon>SelectUltimaClient.xaml</DependentUpon>
     </Compile>
     <Compile Include="UltimaClient.cs" />
+    <Page Include="AutomapImportWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="ChatControl.xaml">
       <SubType>Designer</SubType>
       <Generator>MSBuild:Compile</Generator>

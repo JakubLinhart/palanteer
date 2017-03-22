@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
 using System.Net.Http;
 using System.Net.Http.Headers;
@@ -12,6 +13,7 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Threading;
 using Microsoft.AspNet.SignalR.Client;
+using Microsoft.Win32;
 using Ultima;
 
 namespace Palanteer.Desktop
@@ -71,10 +73,10 @@ namespace Palanteer.Desktop
         private void InitializeEditPlaceViewModel()
         {
             var placeRepository = new HttpRestPlaceRepository(Client);
-            var placeViewModel = new EditPlaceViewModel(mapViewModel.Player, mapViewModel.Places, placeRepository);
-            _placeControl.DataContext = placeViewModel;
+            editPlaceViewModel = new EditPlaceViewModel(mapViewModel.Player, mapViewModel.Places, placeRepository);
+            _placeControl.DataContext = editPlaceViewModel;
 
-            Task.Run(() => LoadSharedPlaces(placeViewModel, placeRepository));
+            Task.Run(() => LoadSharedPlaces(editPlaceViewModel, placeRepository));
         }
 
         private async Task LoadSharedPlaces(EditPlaceViewModel placeViewModel, IPlaceRepository placeRepository)
@@ -129,6 +131,7 @@ namespace Palanteer.Desktop
         }
 
         Dictionary<string, PlayerMarker> remotePlayerMarkers = new Dictionary<string, PlayerMarker>();
+        private EditPlaceViewModel editPlaceViewModel;
 
         private void RefreshPlayerPosition()
         {
@@ -182,6 +185,19 @@ namespace Palanteer.Desktop
             {
                 mapViewModel.TrackedPlayer = null;
                 mapViewModel.SelectedPosition = position;
+            }
+        }
+
+        private void OnImportButtonClicked(object sender, RoutedEventArgs e)
+        {
+            OpenFileDialog openFileDialog = new OpenFileDialog();
+            openFileDialog.Filter = "UOAutomap files (*.map)|*.map";
+            if (openFileDialog.ShowDialog() == true)
+            {
+                string importedText = File.ReadAllText(openFileDialog.FileName);
+                var importedPlaces = UoAutomapImporter.Import(importedText);
+                var importWindow = new AutomapImportWindow(importedPlaces, this.editPlaceViewModel);
+                importWindow.ShowDialog();
             }
         }
     }

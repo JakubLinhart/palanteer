@@ -48,6 +48,26 @@ namespace Palanteer.Desktop
             }
         }
 
+        public string Type
+        {
+            get { return Place.Type; }
+            set
+            {
+                Place.Type = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string Description
+        {
+            get { return Place.Description; }
+            set
+            {
+                Place.Description = value;
+                OnPropertyChanged();
+            }
+        }
+
         public void Select()
         {
             OnSelected();

@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Palanteer.Desktop"
         xmlns:t="clr-namespace:Simple.Wpf.Terminal;assembly=Simple.Wpf.Terminal"
         mc:Ignorable="d"
-        Title="MainWindow" Height="350" Width="525">
+        Title="Palanteer" Height="350" Width="525">
     <DockPanel>
         <Expander ExpandDirection="Right" DockPanel.Dock="Right">
             <StackPanel Margin="5 10 5 10">
@@ -14,7 +14,8 @@
                 <local:SelectUltimaClient Margin="0 0 0 10" />
                 <TextBlock Text="Player name:" />
                 <TextBox Text="{Binding Path=Player.Name}"  Margin="0 0 0 10" />
-                <local:EditPlaceControl x:Name="_placeControl" Width="180" Margin="0 0 0 10" />
+                <local:EditPlaceControl x:Name="_placeControl" Margin="0 0 0 10" />
+                <Button Content="Import" Margin="0 0 0 10" Click="OnImportButtonClicked"/>
                 <Grid Margin="0 0 0 10">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="Auto" />

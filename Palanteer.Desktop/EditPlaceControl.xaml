@@ -23,6 +23,10 @@
                 <TextBlock Grid.Column="1" Margin="5 0 5 0"> /</TextBlock>
                 <TextBox Grid.Column="2" Text="{Binding Path=SelectedPlace.Y}" />
             </Grid>
+            <TextBlock>Type:</TextBlock>
+            <TextBox Margin="0 0 0 5" Text="{Binding Path=SelectedPlace.Type}" />
+            <TextBlock>Description:</TextBlock>
+            <TextBox Margin="0 0 0 5" Text="{Binding Path=SelectedPlace.Description}" TextWrapping="Wrap" AcceptsReturn="True" Height="Auto" />
             <Button Click="OnDeleteButtonClick">Delete</Button>
         </StackPanel>
     </StackPanel>

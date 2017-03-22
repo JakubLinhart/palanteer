@@ -13,6 +13,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Palanteer.WebApi", "Palante
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Palanteer.Desktop.Tests", "Palanteer.Desktop.Tests\Palanteer.Desktop.Tests.csproj", "{513D12CE-215E-4EF5-80A5-D52F41C99408}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Palanteer.Tests", "Palanteer.Tests\Palanteer.Tests.csproj", "{7C4FED1A-01E5-4919-999F-0DC84780E10C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -39,6 +41,10 @@ Global
 		{513D12CE-215E-4EF5-80A5-D52F41C99408}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{513D12CE-215E-4EF5-80A5-D52F41C99408}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{513D12CE-215E-4EF5-80A5-D52F41C99408}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C4FED1A-01E5-4919-999F-0DC84780E10C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C4FED1A-01E5-4919-999F-0DC84780E10C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C4FED1A-01E5-4919-999F-0DC84780E10C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C4FED1A-01E5-4919-999F-0DC84780E10C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

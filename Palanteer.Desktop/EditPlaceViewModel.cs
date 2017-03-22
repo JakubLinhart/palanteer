@@ -61,13 +61,18 @@ namespace Palanteer.Desktop
             await placeRepository.Update(selectedPlace.Place);
         }
 
-        public async Task NewPlace()
+        public Task NewPlace()
         {
             var place = new Place() {Id = IdGenerator.Generate(), Name = "new place", X = Player.X, Y = Player.Y};
 
+            return NewPlace(place);
+        }
+
+        public Task NewPlace(Place place)
+        {
             SelectedPlace = CreatePlaceMarker(place);
 
-            await placeRepository.Create(place);
+            return placeRepository.Create(place);
         }
 
         private PlaceMarker CreatePlaceMarker(Place place)
