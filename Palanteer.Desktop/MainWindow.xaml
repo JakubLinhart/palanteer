@@ -15,6 +15,16 @@
                 <TextBlock Text="Player name:" />
                 <TextBox Text="{Binding Path=Player.Name}"  Margin="0 0 0 10" />
                 <local:EditPlaceControl x:Name="_placeControl" Width="180" Margin="0 0 0 10" />
+                <Grid Margin="0 0 0 10">
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto" />
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+                    <TextBlock Text="Go to:" Grid.Column="0" Margin="0 0 5 0" />
+                    <TextBox x:Name="_positionTextBox" Grid.Column="1" Margin="0 0 5 0" />
+                    <Button Content="Go" Grid.Column="2" Click="GoButtonClicked" />
+                </Grid>
                 <TextBlock Text="Players:" />
                 <ListBox ItemsSource="{Binding Path=Players}" SelectedItem="{Binding Path=TrackedPlayer}"
                          DisplayMemberPath="Name" SelectedValuePath="Id" SelectionMode="Multiple"

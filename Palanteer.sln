@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26228.4
+VisualStudioVersion = 15.0.26228.9
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Palanteer.Desktop", "Palanteer.Desktop\Palanteer.Desktop.csproj", "{94948DD8-C670-4ADD-92FA-DAF21E83CC5F}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Palanteer", "Palanteer\Palanteer.csproj", "{914CD6EC-5F22-4CFF-BA1D-EDE376E6A10D}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Palanteer.WebApi", "Palanteer.WebApi\Palanteer.WebApi.csproj", "{49D94826-FC4B-4B70-BBCF-C7D8299CCD32}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Palanteer.Desktop.Tests", "Palanteer.Desktop.Tests\Palanteer.Desktop.Tests.csproj", "{513D12CE-215E-4EF5-80A5-D52F41C99408}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{49D94826-FC4B-4B70-BBCF-C7D8299CCD32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{49D94826-FC4B-4B70-BBCF-C7D8299CCD32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{49D94826-FC4B-4B70-BBCF-C7D8299CCD32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{513D12CE-215E-4EF5-80A5-D52F41C99408}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{513D12CE-215E-4EF5-80A5-D52F41C99408}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{513D12CE-215E-4EF5-80A5-D52F41C99408}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{513D12CE-215E-4EF5-80A5-D52F41C99408}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

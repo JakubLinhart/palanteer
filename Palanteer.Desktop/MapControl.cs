@@ -8,12 +8,13 @@ using System.Windows.Controls;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Shapes;
 
 namespace Palanteer.Desktop
 {
     public class MapControl : Border
     {
-        private readonly Dictionary<object, Button> markerControls = new Dictionary<object, Button>();
+        private readonly Dictionary<object, UIElement> markerControls = new Dictionary<object, UIElement>();
 
         private Canvas canvas;
         private UIElement child;
@@ -25,6 +26,7 @@ namespace Palanteer.Desktop
         private Point start;
         private bool xRay;
         private BitmapImage xrayMapImage;
+        private Ellipse selectedPositionControl;
 
         public bool XRay
         {
@@ -51,6 +53,8 @@ namespace Palanteer.Desktop
             mapViewModel.Places.CollectionChanged += OnMarkersCollectionChanged;
             mapViewModel.Players.CollectionChanged += OnMarkersCollectionChanged;
 
+            CreateSelectedPoisitionControl();
+
             Child = canvas;
             Initialize(canvas);
         }
@@ -67,11 +71,32 @@ namespace Palanteer.Desktop
         {
             switch (e.PropertyName)
             {
-                case "TrackedPlayer":
-                    if (mapViewModel.TrackedPlayer != null)
-                        CenterTo(mapViewModel.TrackedPlayer);
+                case "SelectedPosition":
+                    CenterTo(mapViewModel.SelectedPosition.X, mapViewModel.SelectedPosition.Y);
+
+                    MoveSelectedPositionControl();
                     break;
             }
+        }
+
+        private void MoveSelectedPositionControl()
+        {
+            selectedPositionControl.Visibility = Visibility.Visible;
+
+            Canvas.SetLeft(selectedPositionControl, mapViewModel.SelectedPosition.X - 5);
+            Canvas.SetTop(selectedPositionControl, mapViewModel.SelectedPosition.Y - 5);
+        }
+
+        private void CreateSelectedPoisitionControl()
+        {
+            selectedPositionControl = new Ellipse();
+            selectedPositionControl.Width = 10;
+            selectedPositionControl.Height = 10;
+            selectedPositionControl.StrokeThickness = 2;
+            selectedPositionControl.Stroke = Brushes.Red;
+            selectedPositionControl.Visibility = Visibility.Collapsed;
+
+            canvas.Children.Add(selectedPositionControl);
         }
 
         private void OnMarkersCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -81,8 +106,9 @@ namespace Palanteer.Desktop
                 case NotifyCollectionChangedAction.Remove:
                     foreach (INotifyPropertyChanged marker in e.OldItems)
                     {
-                        var button = markerControls[marker];
-                        button.Click -= OnMarkerButtonClicked;
+                        var button = markerControls[marker] as Button;
+                        if (button != null)
+                            button.Click -= OnMarkerButtonClicked;
 
                         marker.PropertyChanged -= OnMarkerPropertyChanged;
 
@@ -100,8 +126,9 @@ namespace Palanteer.Desktop
                         var button = new Button
                         {
                             RenderTransform = transformGroup,
-                            Background = Brushes.White,
-                            BorderBrush = Brushes.Black
+                            Background = Brushes.Transparent,
+                            BorderBrush = Brushes.Red,
+                            Foreground = Brushes.Red,
                         };
                         canvas.Children.Add(button);
 
@@ -130,17 +157,17 @@ namespace Palanteer.Desktop
         {
             if (sender is IMarker marker)
             {
-                var button = markerControls[marker];
-                button.Content = marker.Name;
-                Canvas.SetLeft(button, marker.X);
-                Canvas.SetTop(button, marker.Y);
-            }
+                var control = markerControls[marker];
+                Canvas.SetLeft(control, marker.X);
+                Canvas.SetTop(control, marker.Y);
 
-            if (sender is PlayerMarker player && mapViewModel.TrackedPlayer?.Id == player.Id)
-                CenterTo(player);
+                var button = control as Button;
+                if (button != null)
+                    button.Content = marker.Name;
+            }
         }
 
-        private void CenterTo(IMarker marker)
+        private void CenterTo(double x, double y)
         {
             var translateTransform = GetTranslateTransform(child);
             var scaleTransform = GetScaleTransform(child);
@@ -150,8 +177,8 @@ namespace Palanteer.Desktop
             var origDim = rotateTransform.Inverse.Transform(scaleTransform.Inverse.Transform(dimensions));
 
             var point = new Point();
-            point.X = -marker.X + origDim.X / 2;
-            point.Y = -marker.Y + origDim.Y / 2;
+            point.X = -x + origDim.X / 2;
+            point.Y = -y + origDim.Y / 2;
 
             var rotatedPoint = scaleTransform.Transform(rotateTransform.Transform(point));
 
@@ -244,11 +271,12 @@ namespace Palanteer.Desktop
                 if (scaleTransform.ScaleX < 1)
                     group.Children.Add((Transform) scaleTransform.Inverse);
                 group.Children.Add((Transform) rotateTransform.Inverse);
-                foreach (var markerControl in markerControls.Values)
+                foreach (var markerControl in markerControls.Values.OfType<Button>())
                 {
                     if (markerControl.Tag is PlayerMarker)
                         markerControl.RenderTransform = group;
                 }
+                selectedPositionControl.RenderTransform = group;
             }
         }
 

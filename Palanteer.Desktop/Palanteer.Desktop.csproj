@@ -92,6 +92,7 @@
     <Compile Include="IPlayerRepository.cs" />
     <Compile Include="MapControl.cs" />
     <Compile Include="HttpRestPlaceRepository.cs" />
+    <Compile Include="PositionParser.cs" />
     <Compile Include="SelectUltimaClient.xaml.cs">
       <DependentUpon>SelectUltimaClient.xaml</DependentUpon>
     </Compile>

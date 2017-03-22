@@ -175,5 +175,14 @@ namespace Palanteer.Desktop
         {   
             _mapControl.XRay = false;
         }
+
+        private void GoButtonClicked(object sender, RoutedEventArgs e)
+        {
+            if (PositionParser.TryParse(_positionTextBox.Text, out Point position))
+            {
+                mapViewModel.TrackedPlayer = null;
+                mapViewModel.SelectedPosition = position;
+            }
+        }
     }
 }
