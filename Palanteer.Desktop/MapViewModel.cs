@@ -1,21 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.ComponentModel;
-using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace Palanteer.Desktop
 {
     public sealed class MapViewModel : INotifyPropertyChanged
     {
+        private string palanteerUrl = "http://palanteer.azurewebsites.net/";
         private PlayerMarker player;
-        private PlayerMarker trackedPlayer;
         private Point selectedPosition;
-        public event PropertyChangedEventHandler PropertyChanged;
+        private PlayerMarker trackedPlayer;
 
         public ObservableCollection<PlayerMarker> Players { get; } = new ObservableCollection<PlayerMarker>();
         public ObservableCollection<PlaceMarker> Places { get; } = new ObservableCollection<PlaceMarker>();
@@ -26,9 +21,7 @@ namespace Palanteer.Desktop
             set
             {
                 if (player != null)
-                {
                     Players.Remove(player);
-                }
 
                 player = value;
 
@@ -43,7 +36,17 @@ namespace Palanteer.Desktop
             get { return selectedPosition; }
             set
             {
-                selectedPosition = value; 
+                selectedPosition = value;
+                OnPropertyChanged();
+            }
+        }
+
+        public string PalanteerUrl
+        {
+            get { return palanteerUrl; }
+            set
+            {
+                palanteerUrl = value;
                 OnPropertyChanged();
             }
         }
@@ -65,6 +68,8 @@ namespace Palanteer.Desktop
                 OnPropertyChanged();
             }
         }
+
+        public event PropertyChangedEventHandler PropertyChanged;
 
         private void OnPlayerPropertyChanged(object sender, PropertyChangedEventArgs e)
         {

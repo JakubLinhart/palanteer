@@ -22,7 +22,16 @@ namespace Palanteer.Desktop
             return await response.Content.ReadAsAsync<Player[]>();
         }
 
-        public Task Update(Player player) => httpClient.PostAsJsonAsync("api/players", player);
-        public Task Delete(string playerId) => httpClient.DeleteAsync($"api/players/{playerId}");
+        public async Task Update(Player player)
+        {
+            if (httpClient.BaseAddress != null)
+                await httpClient.PostAsJsonAsync("api/players", player);
+        }
+
+        public async Task Delete(string playerId)
+        {
+            if (httpClient.BaseAddress != null)
+                await httpClient.DeleteAsync($"api/players/{playerId}");
+        }
     }
 }

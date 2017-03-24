@@ -37,7 +37,6 @@ namespace Palanteer.Desktop
 
             DataContext = mapViewModel;
 
-            Client.BaseAddress = new Uri("http://localhost:2044/");
             Client.DefaultRequestHeaders.Accept.Clear();
             Client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
@@ -45,15 +44,36 @@ namespace Palanteer.Desktop
             mapViewModel.Player = new PlayerMarker(new Player() { Id = IdGenerator.Generate(), Name = "Player" });
 
             InitializeEditPlaceViewModel();
-            Task.Run(() => InitializePlayerPositionTracking());
-            Task.Run(() => LoadRemotePlayers());
+            Ultima.Client.Calibrate();
 
             chatViewModel = new ChatViewModel(mapViewModel.Player, chatRepository, this.Dispatcher);
             _chatControl.DataContext = chatViewModel;
         }
 
-        private async Task LoadRemotePlayers()
+        private static readonly HttpClient Client = new HttpClient();
+
+        public async Task ConnectToServer()
         {
+            if (string.IsNullOrEmpty(mapViewModel.PalanteerUrl))
+                return;
+
+            Client.BaseAddress = new Uri(mapViewModel.PalanteerUrl);
+
+            var places = await placeRepository.Get();
+            Dispatcher.Invoke(() =>
+            {
+                foreach (var place in places)
+                {
+                    editPlaceViewModel.AddPlace(place);
+                }
+            });
+
+            var lines = await this.chatRepository.GetHistory();
+            Dispatcher.Invoke(() =>
+            {
+                chatViewModel.Lines = new ObservableCollection<ChatLine>(lines);
+            });
+
             var allPlayers = await playerRepository.GetAll();
             var markers = allPlayers.Where(p => p.Id != mapViewModel.Player.Id)
                 .Select(p => new PlayerMarker(p));
@@ -66,36 +86,8 @@ namespace Palanteer.Desktop
                     mapViewModel.Players.Add(marker);
                 }
             });
-        }
 
-        private static readonly HttpClient Client = new HttpClient();
-
-        private void InitializeEditPlaceViewModel()
-        {
-            var placeRepository = new HttpRestPlaceRepository(Client);
-            editPlaceViewModel = new EditPlaceViewModel(mapViewModel.Player, mapViewModel.Places, placeRepository);
-            _placeControl.DataContext = editPlaceViewModel;
-
-            Task.Run(() => LoadSharedPlaces(editPlaceViewModel, placeRepository));
-        }
-
-        private async Task LoadSharedPlaces(EditPlaceViewModel placeViewModel, IPlaceRepository placeRepository)
-        {
-            var places = await placeRepository.Get();
-            Application.Current.Dispatcher.Invoke(() =>
-            {
-                foreach (var place in places)
-                {
-                    placeViewModel.AddPlace(place);
-                }
-            });
-        }
-
-        private void InitializePlayerPositionTracking()
-        {
-            Ultima.Client.Calibrate();
-
-            var hubConnection = new HubConnection("http://localhost:2044/");
+            var hubConnection = new HubConnection(mapViewModel.PalanteerUrl);
             IHubProxy palanteerHubProxy = hubConnection.CreateHubProxy("PalanteerHub");
             palanteerHubProxy.On<Player>("PlayerUpdated", OnRemotePlayerUpdated);
             palanteerHubProxy.On<ChatLine>("ChatLineAdded", this.chatRepository.OnChatLineAdded);
@@ -104,6 +96,13 @@ namespace Palanteer.Desktop
             playerPositionRefreshTimer.Tick += PlayerPositionRefreshTimerOnTick;
             playerPositionRefreshTimer.Interval = TimeSpan.FromSeconds(1);
             playerPositionRefreshTimer.Start();
+        }
+
+        private void InitializeEditPlaceViewModel()
+        {
+            placeRepository = new HttpRestPlaceRepository(Client);
+            editPlaceViewModel = new EditPlaceViewModel(mapViewModel.Player, mapViewModel.Places, placeRepository);
+            _placeControl.DataContext = editPlaceViewModel;
         }
 
         private void OnRemotePlayerUpdated(Player player)
@@ -132,6 +131,7 @@ namespace Palanteer.Desktop
 
         Dictionary<string, PlayerMarker> remotePlayerMarkers = new Dictionary<string, PlayerMarker>();
         private EditPlaceViewModel editPlaceViewModel;
+        private HttpRestPlaceRepository placeRepository;
 
         private void RefreshPlayerPosition()
         {
@@ -199,6 +199,11 @@ namespace Palanteer.Desktop
                 var importWindow = new AutomapImportWindow(importedPlaces, this.editPlaceViewModel);
                 importWindow.ShowDialog();
             }
+        }
+
+        private void OnConnectButtonClicked(object sender, RoutedEventArgs e)
+        {
+            ConnectToServer();
         }
     }
 }

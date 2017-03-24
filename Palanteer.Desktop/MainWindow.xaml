@@ -10,6 +10,11 @@
     <DockPanel>
         <Expander ExpandDirection="Right" DockPanel.Dock="Right">
             <StackPanel Margin="5 10 5 10">
+                <TextBlock>Palanteer URL:</TextBlock>
+                <DockPanel Margin="0 0 0 10">
+                    <Button Content="Connect" DockPanel.Dock="Right" Click="OnConnectButtonClicked" />
+                    <TextBox Text="{Binding Path=PalanteerUrl}" Margin="0 0 5 0" />
+                </DockPanel>
                 <CheckBox Content="x-ray view" Checked="XRayOnChecked" Unchecked="XRayOnUnchecked" />
                 <local:SelectUltimaClient Margin="0 0 0 10" />
                 <TextBlock Text="Player name:" />

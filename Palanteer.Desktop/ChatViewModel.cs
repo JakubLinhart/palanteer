@@ -23,17 +23,6 @@ namespace Palanteer.Desktop
             this.chatRepository = chatRepository;
             this.dispatcher = dispatcher;
             this.chatRepository.ChatLineAdded += (sender, line) => dispatcher.Invoke(() => Lines.Add(line));
-
-            Task.Run(LoadHistory);
-        }
-
-        private async Task LoadHistory()
-        {
-            var lines = await this.chatRepository.GetHistory();
-            dispatcher.Invoke(() =>
-            {
-                Lines = new ObservableCollection<ChatLine>(lines);
-            });
         }
 
         public string Prompt
@@ -49,7 +38,7 @@ namespace Palanteer.Desktop
         public ObservableCollection<ChatLine> Lines
         {
             get { return lines; }
-            private set
+            set
             {
                 lines = value;
                 OnPropertyChanged();
